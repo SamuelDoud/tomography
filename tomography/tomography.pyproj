@@ -5,7 +5,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b3737130-29ff-43d2-93c4-ecf8a41c4250</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>tomography.py</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -31,7 +32,9 @@
     <Compile Include="src\packet.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="tomography.py" />
+    <Compile Include="src\tomography.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\" />
