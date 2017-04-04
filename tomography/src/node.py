@@ -1,23 +1,30 @@
 import packet
 
 class node(object):
-    def __init__(self, address, connections):
+    def __init__(self, connections, address, debugging=True):
         self.address = address
         self.address_split = self.address.split('.')
         self.connections = list(connections)
+        self.debug = debugging
 
     def create_traffic(self, message, target):
-        data = packet(self.address, target, message)
-        route_traffic(data)
+        """Generates traffic from this node to a target"""
+        data = packet.packet(target, self.address, message)
+        self.route_traffic(data)
 
-    def recieve(self, data):
-        if data.address is not self.address:
+    def recieve(self, packet):
+        """Takes a packet from a connection and determines
+         its next connection if not the target."""
+        if packet.destination is not self.address:
             try:
-                self.route_traffic(data)
+                self.route_traffic(packet)
             except LookupError:
                 print("Cannot route traffic")
+        else:
+            self.debug(packet.message)
 
     def route_traffic(self, data):
+        """Find the correct node to send a packet to."""
         address = data.destination.split('.')
         #determine if the traffic is downstream or upstream
         destination = self.determine_common_node(address)
@@ -28,11 +35,12 @@ class node(object):
         raise LookupError()
 
     def determine_common_node(self, target_address):
+        """Determine the first node the target and this node share in common"""
         if len(target_address) is not len(self.address_split):
             while len(target_address) > len(self.address_split):
                 self.address_split.append(0)
             while len(target_address) < len(self.address_split):
-                self.target_address.append(0)
+                target_address.append(0)
         for index, this_layer in enumerate(self.address_split):
             if this_layer is not target_address[index]:
                 if this_layer is 0:
@@ -43,3 +51,7 @@ class node(object):
 
     def search(self):
         pass
+
+    def debug(self, message):
+        if self.dubug_mode:
+            print(message)
