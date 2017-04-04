@@ -1,18 +1,19 @@
-import packet
+import Packet
 
-class node(object):
+class Node(object):
+    """A node is the [current] base class of an object that connects to the 'Internet'."""
     def __init__(self, connections, address, debugging=True):
         self.address = address
         self.address_split = self.address.split('.')
         self.connections = list(connections)
-        self.debug = debugging
+        self.debug_mode = debugging
 
     def create_traffic(self, message, target):
         """Generates traffic from this node to a target"""
-        data = packet.packet(target, self.address, message)
+        data = Packet.Packet(target, self.address, message)
         self.route_traffic(data)
 
-    def recieve(self, packet):
+    def recieve_packet(self, packet):
         """Takes a packet from a connection and determines
          its next connection if not the target."""
         if packet.destination is not self.address:
@@ -47,11 +48,13 @@ class node(object):
                     return self.address_split
                 if target_address[index] is 0:
                     return target_address
-                return (target_address[:index] + ([0] * (len(target_address) - index)))
+                return target_address[:index] + ([0] * (len(target_address) - index))
 
     def search(self):
+        """Placeholder method that will find a path if the normal methods do not work."""
         pass
 
     def debug(self, message):
-        if self.dubug_mode:
+        """Prints messages if debugging is active."""
+        if self.debug_mode:
             print(message)
