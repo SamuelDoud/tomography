@@ -1,15 +1,19 @@
-import Packet
+"""Object that defines a Node on the network to create, consume, and diseminate data
+throughout the network."""
 
 import random
 
+import Packet
+
 class Node(object):
     """A node is the [current] base class of an object that connects to the 'Internet'."""
-    def __init__(self, connections, address, debugging=True):
+    def __init__(self, connections=None, address=None, *, debugging=True):
         self.address = address
         self.address_split = self.address.split('.')
-        self.connections = list(connections)
+        self.connections = list(connections) if connections else []
         self.debug_mode = debugging
         self.paths_cache = []
+        self.address_counter = -1
 
     def generate_traffic(self, target_node_address, message=""):
         """Generates traffic from this node to a target"""
@@ -66,9 +70,53 @@ class Node(object):
         if self.debug_mode:
             print(message)
 
+    def add_connection(self, connection):
+        """Add a Connection to this Node.
+        This allows for the Node to calculate an address."""
+        self.connections.append(connection)
+        if not self.address:
+            self.assign_address()
+
+    def remove_connection(self, connection):
+        """Delete a connection from the Node.
+        If the Node used to generate the Address was selected, reassign the address"""
+        index = self.connections.index(connection)
+        if index > 0:
+            self.connections.pop(connection)
+        if index is 0:
+            #No longer connected to any other Node. Delete its address
+            self.address = None
+
+    def assign_address(self, incrementer=0, override=None):
+        """Give this Node an address based on the first upstream Node we find.
+        If no upstream nodes exist, assign the value of the incrementer.
+        The incrementer is the number that will be assigned to nodes with no upstream members
+        (in other words, the center of the network)."""
+        if override:
+            self.address = override
+            return incrementer
+        for index, connection in enumerate(self.connections):
+            if connection.start_node.address is not self.address:
+                self.address = self.construct_address(connection)
+                #Move this connection to the first position in the list.
+                self.connections.pop(index)
+                self.connections.insert(0, connection)
+                return incrementer
+        return incrementer + 1
+
+    def construct_address(self, upstream_node):
+        """Give this node an address based on an upstream node"""
+        address_ending = upstream_node.add_downstream()
+        self.address = upstream_node.address + "." + address_ending
+
+    def add_downstream(self):
+        """Get the next index to assign a node"""
+        self.address_counter += 1
+        return self.address_counter
+
 class EndUser(Node):
     """An EndUser is a Node that is analogous to a consumer of information."""
-    def __init__(self, connections, address, debugging=True, traffic_chance=0.1):
+    def __init__(self, connections, address, *, debugging=True, traffic_chance=0.1):
         super().__init__(self, connections, address, debugging)
         if traffic_chance > 0 and traffic_chance <= 1:
             self.traffic_chance = traffic_chance
@@ -100,7 +148,8 @@ class EndUser(Node):
 class Server(Node):
     """A server is a node that generates more traffic than it recieves.
     Think of a Netflix or a Facebook. They send more to their users than vice-versa."""
-    def init(self, connections, address, debugging=True, traffic_level=10, std_dev=2):
+    def init(self, connections, address, *, debugging=True, traffic_level=10, std_dev=3):
+        """"Creates a Server instance of a Node."""
         super().__init__(self, connections, address, debugging)
         self.traffic_level, self.std_dev = 0, 0
         if traffic_level > 0:

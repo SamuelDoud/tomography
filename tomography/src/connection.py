@@ -1,3 +1,5 @@
+"""A Connection is a list of links. Propagates data to and from Nodes."""
+
 import Packet
 
 class Connection(object):
@@ -63,3 +65,11 @@ class Connection(object):
             self.start_node.recieve_packet(packet)
         if packet.direction is Packet.OUTBOUND:
             self.end_node.recieve_packet(packet)
+
+    def end_point(self, node_address):
+        """Checks if a given address is a start or end point of this Connection."""
+        return node_address is self.end_node or node_address is self.start_node
+
+    def connected(self, node1_address, node2_address):
+        """Checks if this connection connect node1 to node2?"""
+        return self.end_point(node1_address) and self.end_point(node2_address)
