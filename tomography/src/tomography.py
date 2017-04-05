@@ -15,7 +15,7 @@ class Tomography(object):
 
     def tick(self):
         """Increment all connections by one unit of time."""
-        [connection.tick() for connection in self.connections]
+        return [connection.tick() for connection in self.connections]
 
 def validate_connections(nodes, connections):
     """Ensure all connections actually connect to a node that has been provided."""
