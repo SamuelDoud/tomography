@@ -35,6 +35,8 @@ class Node(object):
         destination = self.determine_common_node(address)
         for connection in self.connections:
             if connection.address is destination:
+                #The Node to route traffic to has been found
+                #send traffic to it and end the search.
                 connection.send_data(self.address, packet)
                 return
         raise LookupError()
@@ -121,4 +123,3 @@ class Server(Node):
         """Gets a message from another node and fires back a many packets."""
         super().debug(packet.message)
         self.generate_traffic(packet.origin, "Responding to " + packet.message + ". ")
-        
