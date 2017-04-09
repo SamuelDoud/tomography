@@ -2,7 +2,7 @@
 
 from tkinter import Tk, Frame
 
-import Tomography
+from tomography import Tomography
 
 class Display(Frame):
     """Provide the user with a visualization of the network and a way to interact with it."""
@@ -11,7 +11,7 @@ class Display(Frame):
         self.master = master
         self.master.title("Tomography")
         self.master.protocol("WM_DELETE_WINDOW", self.shutdown)
-        self.tomography = Tomography.Tomography()
+        self.tomography = Tomography()
 
     def tick(self, time=1):
         """Increment n units of time."""

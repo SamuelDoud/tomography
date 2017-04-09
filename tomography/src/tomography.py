@@ -15,8 +15,8 @@ class Tomography(object):
                 self.connections = connections
         except AttributeError:
             print("A connection does not have an end or start point")
-        self.nodes = [] + nodes
-        self.connections = [] + connections
+        self.nodes = nodes
+        self.connections = connections
 
     def remove_node(self, node):
         """Removes the node from the list of Nodes and removes any connections that
@@ -58,6 +58,8 @@ def validate_connections(nodes, connections):
     """Ensure all connections actually connect to a node that has been provided."""
     #nodes may have multiple connections to the same node
     #(this is to allow for data centers/smaller servers)
+    if not connections or not nodes:
+        return
     if len(nodes) < len(connections) - 1:
         #There can't be no nodes then connections less 1
         raise IndexError
