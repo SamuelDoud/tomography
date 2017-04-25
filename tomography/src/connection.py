@@ -62,9 +62,9 @@ class Connection(object):
         Also pass to tapping nodes"""
         for tap in self.tapping_nodes:
             tap.recieve_packet.append(packet)
-        if packet.direction is Packet.INBOUND:
+        if packet.direction is Packet.UPSTREAM:
             self.start_node.recieve_packet(packet)
-        if packet.direction is Packet.OUTBOUND:
+        if packet.direction is Packet.DOWNSTREAM:
             self.end_node.recieve_packet(packet)
 
     def end_point(self, node_address):
