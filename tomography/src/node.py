@@ -2,6 +2,7 @@
 throughout the network."""
 
 import random
+import collections
 
 import Packet
 
@@ -11,6 +12,7 @@ class Node(object):
         self.address = address
         self.address_split = self.address.split('.')
         self.connections = list(connections) if connections else []
+        self.connections[0] = [self.connections[0]]
         self.debug_mode = debugging
         self.paths_cache = []
         self.address_counter = -1
@@ -70,12 +72,18 @@ class Node(object):
         if self.debug_mode:
             print(message)
 
-    def add_connection(self, connection):
+    def add_connection(self, connection, is_parent):
         """Add a Connection to this Node.
         This allows for the Node to calculate an address."""
-        self.connections.append(connection)
-        if not self.address:
-            self.assign_address()
+        if is_parent:
+            self.connections.append(connection)
+            if not self.address:
+                self.assign_address()
+        else:
+            #add the parent connection to the first spot
+            if not isinstance(self.connections[0], collections.Iterable):
+                self.connections[0] = [self.connections[0]]
+            self.connections[0].append(connection)
 
     def remove_connection(self, connection):
         """Delete a connection from the Node.
@@ -99,8 +107,9 @@ class Node(object):
             if connection.start_node.address is not self.address:
                 self.address = self.construct_address(connection)
                 #Move this connection to the first position in the list.
-                self.connections.pop(index)
-                self.connections.insert(0, connection)
+                if index is not 0:
+                    self.connections.pop(index)
+                    self.connections.append(connection)
                 return incrementer
         return incrementer + 1
 
