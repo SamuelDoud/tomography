@@ -6,6 +6,7 @@ class Link(object):
         self.weight = weight
         self.nodes = [self.start_node, self.end_node]
         self.buffer = []
+        self.in_link = [None] * self.weight
         self.buffer_size = buffer_size
         self.data_bubble = None
 
@@ -14,24 +15,26 @@ class Link(object):
         if len(self.buffer) > self.buffer_size:
             #The buffer is full and the packet will be dropped if not handled.
             raise OverflowError
-        self.buffer.append(data, self.weight)
+        self.buffer.append(data)
 
     def tick(self):
         """Update the buffer by decrementing the time on the top link by one."""
         self.data_bubble = None
         if self.buffer:
-            if self.buffer[0][1] is 1:
-                self.pass_packet(self.buffer[0][0])
-                self.buffer.pop(0)
-            else:
-                #deduct one tick
-                self.buffer[0][1] -= 1
+            #the packet has now reached its destination
+            self.in_link.append(self.buffer[0])
+            self.buffer = self.buffer.pop(0)
+        else:
+            self.in_link.append(None)
+        self.pass_packet()
         return self.data_bubble
 
-    def pass_packet(self, data):
+    def pass_packet(self):
         """Simple method to propagate the data that just passed through the
          link to the connection."""
-        self.data_bubble = data
+        self.data_bubble = self.in_link[0]
+        self.in_link = self.in_link.pop(0)
+        return self.data_bubble
 
     def buffer_sum(self):
         """Get the number of ticks required to clear the buffer.
