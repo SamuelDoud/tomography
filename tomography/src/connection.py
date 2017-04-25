@@ -1,11 +1,10 @@
 """A Connection is a list of links. Propagates data to and from Nodes."""
-
 import Packet
 
 class Connection(object):
     """Container for Link objects."""
     def __init__(self, start_node, end_node, tapping_nodes=None):
-        self.links = []
+        self.links = [[], []]
         self.start_node = start_node
         self.end_node = end_node
         self.tapping_nodes = []
@@ -31,21 +30,21 @@ class Connection(object):
     def send_packet(self, origin, packet):
         """Send the packet to the link."""
         if origin is self.start_node.address:
-            packet.direction = Packet.OUTBOUND
+            packet.direction = Packet.DOWNSTREAM
         else:
-            packet.direction = Packet.INBOUND
-        self.links[(self.best_link())].recieve_packet(packet)
+            packet.direction = Packet.UPSTREAM
+        self.best_link(packet.direction).recieve_packet(packet)
 
-    def best_link(self):
+    def best_link(self, direction):
         """Find the least busy link in this connection."""
         min_index = None
         min_index = 0
-        for index, time in enumerate([link.buffer_sum() for link in self.links]):
+        for index, time in enumerate([link.buffer_sum() for link in self.links[direction]]):
             if not min_index:
                 min_index = time
             elif min_index > time:
                 min_index = index
-        return self.links[min_index]
+        return self.links[direction][min_index]
 
     def add_link(self, link=None, links=None):
         """Add a link and/or links to this connection."""
@@ -54,7 +53,9 @@ class Connection(object):
             links = []
         links.append(link)
         for new_link in links:
-            self.links.append(new_link)
+            pos = Packet.UPSTREAM if new_link.start_node is self.end_node else Packet.UPSTREAM
+            #add a link to upstream or downstream links
+            self.links[pos].append(new_link)
 
     def pass_to_node(self, packet):
         """Give data to the node that the data did not come from.
