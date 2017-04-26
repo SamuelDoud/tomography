@@ -9,14 +9,13 @@ class Packet(object):
         self.origin = origin
         self.message = message
         self.path = path
-        self.has_cached = (len(self.path) > 1
-                           and self.path[0] is origin and self.path[-1] is destination)
-        if ping_msg:
-            self.make_ping_packet(ping_msg)
+        try:
+            self.has_cached = (len(self.path) > 1
+                               and self.path[0] is origin and self.path[-1] is destination)
+        except:
+            self.has_cached = False
+        self.ping_msg = ping_msg
         self.ping_back = ping_back
-
-    def make_ping_packet(self, ping_msg):
-        self.message = ping_msg
 
     def log(self, node_address_to_log):
         """Inserts a nodes address onto the log so that it may be cached for later use"""

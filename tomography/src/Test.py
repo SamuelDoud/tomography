@@ -4,6 +4,7 @@ import Node
 import Tomography
 import Link
 import sys
+import traceback
 
 
 def parse(text):
@@ -57,6 +58,7 @@ def connect_nodes(unconnected_node, connected_node, weight):
 tomo = Tomography.Tomography()
 base_node = Node.Node()
 base_node.address = '1'
+base_node.address_split = ['1']
 tomo.add_node(base_node)
 command = None
 parse('connect 1 2')
@@ -70,5 +72,6 @@ while not command:
         parse(command)
     except:
         print('Invalid Syntax from Prompt')
+        traceback.print_exc()
     if command.lower() is not 'exit':
         command = None

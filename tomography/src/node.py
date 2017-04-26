@@ -13,6 +13,8 @@ class Node(object):
         self.address = address
         if self.address:
             self.address_split = self.address.split('.')
+        else:
+            self.address_split = []
         self.connections = list(connections) if connections else []
         if self.connections:
             self.connections[0] = [self.connections[0]]
@@ -62,29 +64,29 @@ class Node(object):
             address = packet.destination.split('.')
             #determine if the traffic is downstream or upstream
             destination = self.determine_common_node(address)
-        for connection in self.connections:
-            if connection.address == destination:
+        for connection in self.connections[0] + self.connections[1:]:
+            if connection.end_node.address == destination or connection.start_node.address == destination:
                 #The Node to route traffic to has been found
                 #send traffic to it and end the search.
-                connection.send_data(self.address, packet)
+                connection.send_packet(self.address, packet)
                 return
         #if this no connection is found then this code will be reached
         raise LookupError()
 
     def determine_common_node(self, target_address):
         """Determine the first node the target and this node share in common"""
-        if len(target_address) != len(self.address_split):
-            while len(target_address) > len(self.address_split):
-                self.address_split.append(0)
-            while len(target_address) < len(self.address_split):
-                target_address.append(0)
-        for index, this_layer in enumerate(self.address_split):
-            if this_layer != target_address[index]:
-                if this_layer == 0:
-                    return self.address_split
-                if target_address[index] is 0:
-                    return target_address
-                return target_address[:index] + ([0] * (len(target_address) - index))
+        address_split_temp = self.address_split
+        target_address_split = target_address
+        #make them the same length
+        difference = len(address_split_temp) - len(target_address_split)
+        if difference > 0:
+            target_address_split += [0] * difference
+        if difference < 0:
+            address_split_temp += [0] * (-1 * difference)
+        difference_split = [str(int(t) - int(s)) for t, s in zip(target_address_split, address_split_temp)]
+        for index, part in enumerate(difference_split):
+            if part != '0':
+                return '.'.join(address_split_temp[:index] + [target_address_split[index]])
 
     def search(self):
         """Placeholder method that will find a path if the normal methods
@@ -142,7 +144,7 @@ class Node(object):
 
     def ping(self, target_address):
         """Sends a message to another node in order to determine the time to that node"""
-        ping_packet = Packet.Packet(self.address, target_address, ping_msg=self.tick_number)
+        ping_packet = Packet.Packet(target_address, self.address, ping_msg=self.tick_number)
         self.route_traffic(ping_packet)
 
     def add_to_ping_stats(self, ping_packet):

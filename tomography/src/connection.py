@@ -34,7 +34,7 @@ class Connection(object):
                 min_index = time
             elif min_index > time:
                 min_index = index
-        return self.links[direction][min_index]
+        return self.links[min_index][direction]
 
     def add_link(self, link=None, links=None):
         """Add a link and/or links to this connection."""
