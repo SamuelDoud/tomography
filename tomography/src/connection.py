@@ -24,14 +24,18 @@ class Connection(object):
         """Send the packet to the link."""
         if origin == self.start_node.address:
             packet.direction = Packet.DOWNSTREAM
+            packet.log(self.end_node.address)
         else:
             packet.direction = Packet.UPSTREAM
+            packet.log(self.start_node.address)
         self.best_link(packet.direction).recieve_packet(packet)
 
     def best_link(self, direction):
         """Find the least busy link in this connection."""
         min_index = 0
         for index, time in enumerate([link.buffer_sum() for link in self.links[direction]]):
+            if time == None:
+                return self.links[0][direction]
             if not min_index:
                 min_index = time if time else 0
             elif min_index > time:
@@ -58,10 +62,16 @@ class Connection(object):
         # for tap in self.tapping_nodes:
         #    tap.recieve_packet.append(packet)
         if packet:
-            if packet.direction == Packet.UPSTREAM:
+            if packet.destination == self.start_node.address:
                 self.start_node.recieve_packet(packet)
+                return
+            if packet.destination == self.end_node.address:
+                self.end_node.recieve_packet(packet)
+                return
             if packet.direction == Packet.DOWNSTREAM:
                 self.end_node.recieve_packet(packet)
+            if packet.direction == Packet.UPSTREAM:
+                self.start_node.recieve_packet(packet)
 
     def end_point(self, node_address):
         """Checks if a given address is a start or end point of this Connection."""

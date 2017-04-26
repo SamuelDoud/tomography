@@ -11,7 +11,7 @@ import PingInfo
 class Node(object):
     """A node is the [current] base class of an object that connects to the 'Internet'."""
 
-    def __init__(self, connections=None, address=None, *, debugging=True):
+    def __init__(self, connections=None, address=None, *, debugging=False):
         self.address = address
         if self.address:
             self.address_split = self.address.split('.')
@@ -25,13 +25,18 @@ class Node(object):
         self.debug_mode = debugging
         self.paths_cache = {}
         self.ping_info_cache = []
-        self.tick_number = 0
+        self.tick_number = 1
         self.address_counter = -1
+
+    def tick(self, generate_traffic=False):
+        self.tick_number += 1
+        # if generate_traffic:
+        #     #TODO
+        #     self.generate_traffic()
 
     def generate_traffic(self, target_node_address, message=""):
         """Generates traffic from this node to a target.
         This is the method called to tick the model forward."""
-        self.tick_number += 1
         data = Packet.Packet(target_node_address, self.address, message)
         self.route_traffic(data)
 
@@ -44,7 +49,9 @@ class Node(object):
             except LookupError:
                 print("Cannot route traffic")
         else:
-            self.paths_cache[packet.origin] = packet.get_reverse_log
+            if packet.path[-2] == packet.destination:
+                packet.path = packet.path[:-1]
+            self.paths_cache[packet.origin] = packet.log
             if packet.ping_msg:
                 if packet.ping_back:
                     self.add_to_ping_stats(packet)
@@ -54,7 +61,7 @@ class Node(object):
                     packet.destination = temp
                     packet.ping_back = True
                     # maybe make the reverse of the log the cache...
-                    packet.log = []
+                    packet.path = []
                     # send the ping back to the user
                     self.route_traffic(packet)
             self.debug(packet.message)
@@ -64,7 +71,11 @@ class Node(object):
         if packet.has_cached:
             destination = packet.log.index(self.address) + 1
         else:
-            address = packet.destination.split('.')
+            try:
+                address = packet.destination.split('.')
+            except AttributeError:
+                print('Error on packet from ' +str(packet.origin))
+                return
             # determine if the traffic is downstream or upstream
             destination = self.determine_common_node(address)
         for connection in self.connections[0] + self.connections[1:]:
@@ -78,7 +89,7 @@ class Node(object):
 
     def determine_common_node(self, target_address):
         """Determine the first node the target and this node share in common"""
-        address_split_temp = self.address_split
+        address_split_temp = [] + self.address_split
         target_address_split = target_address
         # make them the same length
         difference = len(address_split_temp) - len(target_address_split)
@@ -88,18 +99,17 @@ class Node(object):
             address_split_temp += ['0'] * (-1 * difference)
         difference_split = [str(int(t) - int(s))
                             for t, s in zip(target_address_split, address_split_temp)]
-
         for index, part in enumerate(difference_split):
             if part != '0':
                 if (target_address_split[index] == '0' or address_split_temp[index] == '0'):
                     if target_address_split[index] == '0':
                         destination = '.'.join(address_split_temp[:-1])
                     else:
-                        destination = '.'.join(
-                            target_address_split[:index + 1])
+                        destination = '.'.join(target_address_split[:index+ 1])
                 else:
-                    destination = '.'.join(trim_zero(address_split_temp[:-1]))
+                    destination = '.'.join(trim_zero(address_split_temp)[:-1])
                 break
+        # address_split_temp = trim_zero(address_split_temp)
         return clean(destination)
 
     def search(self):
@@ -110,7 +120,7 @@ class Node(object):
     def debug(self, message):
         """Prints messages if debugging is active."""
         if self.debug_mode:
-            print(message)
+            print('packet message: ' + str(message))
 
     def add_connection(self, connection, is_parent):
         """Add a Connection to this Node.
@@ -172,11 +182,15 @@ class Node(object):
             if target_address == ping_info_cache_item.target:
                 ping_info_cache_item.add_to_stats(time_to_respond, paths)
                 return
-        self.ping_info_cache.append(PingInfo.PingInfo(target_address))
+        self.ping_info_cache.append(PingInfo.PingInfo(self.address, target_address))
         self.ping_info_cache[-1].add_to_stats(time_to_respond, paths)
 
-    def ping_dump(self):
-        message = [ping.information_summary for ping in self.ping_info_cache]
+    def ping_info_dump(self):
+        """Get all information from the run of all pings."""
+        message = ''
+        for ping in self.ping_info_cache:
+            message += ping.information_summary()
+        return message
 
 
 class EndUser(Node):

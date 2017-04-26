@@ -13,7 +13,7 @@ class Packet(object):
         self.path = path
         try:
             self.has_cached = (len(self.path) > 1
-                               and self.path[0] is origin and self.path[-1] is destination)
+                               and self.path[0] == origin and self.path[-1] == destination)
         except:
             self.has_cached = False
         self.ping_msg = ping_msg
@@ -25,6 +25,8 @@ class Packet(object):
             # if a cache exists then we do not want to write additional information
             # that cache will serve as a log
             return
+        if not self.path or self.path[0] != self.origin:
+            self.path = [self.origin]
         self.path.append(node_address_to_log)
 
     def get_reverse_log(self):

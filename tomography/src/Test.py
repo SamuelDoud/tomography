@@ -63,17 +63,33 @@ base_node.address = '1'
 base_node.address_split = ['1']
 tomo.add_node(base_node)
 command = None
+parse('connect 1 70')
 parse('connect 1 2')
-parse('connect 1 2')
-parse('connect 1 2')
+parse('connect 1 3')
 parse('connect 1 2')
 parse('connect 1 2')
 parse('connect 1.1 3')
 parse('connect 1.2 2')
 parse('connect 1.1.1 1')
+parse('connect 1.3 1')
+parse('connect 1.3.1 1')
+parse('connect 1 2')
+parse('connect 1.2.1 9')
+parse('connect 1.2 2')
+parse('connect 1.1.1 1')
 parse('connect 1.4 2')
 parse('connect 1.4 4')
-parse('ping_run 20')
+parse('connect 1.2 2')
+parse('connect 1.3.1 1')
+parse('connect 1.3 1')
+parse('connect 1.3.1 2')
+parse('connect 1 2')
+parse('connect 1.2.1 9')
+parse('connect 1.2 2')
+parse('connect 1.1.1 1')
+parse('connect 1.4 2')
+parse('connect 1.4 4')
+parse('ping_run 5000')
 while not command:
     try:
         command = str(input("Enter: "))
@@ -81,5 +97,5 @@ while not command:
     except:
         print('Invalid Syntax from Prompt')
         traceback.print_exc()
-    if command.lower() is not 'exit':
+    if command.lower() != 'exit':
         command = None

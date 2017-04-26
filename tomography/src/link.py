@@ -15,7 +15,8 @@ class Link(object):
         """Takes a packet from the connection and keeps it until it has passed through the link."""
         if len(self.buffer) > self.buffer_size:
             # The buffer is full and the packet will be dropped if not handled.
-            raise OverflowError
+            #raise OverflowError
+            return
         self.buffer.append(data)
 
     def tick(self):

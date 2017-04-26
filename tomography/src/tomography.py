@@ -55,9 +55,8 @@ class Tomography(object):
 
     def tick(self, generate_traffic=True):
         """Increment all connections by one unit of time."""
-        if generate_traffic:
-            for node in self.nodes:
-                node.generate_traffic()
+        for node in self.nodes:
+            node.tick(generate_traffic)
         for connection in self.connections:
             connection.tick()
 
@@ -74,8 +73,8 @@ class Tomography(object):
         """Prints out the information of all nodes and their pings"""
         message = ''
         for node in self.nodes:
-            message += node.ping_info_dump()
-            message += '\n----------------------------------------------------------------------\n'
+            message += ''.join(node.ping_info_dump())
+            message += '----------------------------------------------------------------------\n'
         return message
 
 
