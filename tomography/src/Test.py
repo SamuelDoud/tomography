@@ -10,8 +10,8 @@ import traceback
 def parse(text):
     text = text.lower()
     arguments = text.split(' ')
-    #print(text)
-    #for argument in arguments:
+    # print(text)
+    # for argument in arguments:
     #    print(argument)
     if arguments[0] == 'connect':
         print('Attempting to add a node to the network')
@@ -40,6 +40,7 @@ def parse(text):
         message += tomo.nodes[-1].address + '.'
         print(message)
 
+
 def connect_nodes(unconnected_node, connected_node, weight):
     """Connects a new node to the network at a given point"""
     weight = int(weight)
@@ -52,7 +53,8 @@ def connect_nodes(unconnected_node, connected_node, weight):
     unconnected_node.add_connection(new_connection, True)
     tomo.add_node(unconnected_node)
     tomo.connections.append(new_connection)
-    print('Added ' + unconnected_node.address + ' to the model with weight ' + str(weight) + '.')
+    print('Added ' + unconnected_node.address +
+          ' to the model with weight ' + str(weight) + '.')
 
 
 tomo = Tomography.Tomography()

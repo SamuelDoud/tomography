@@ -3,11 +3,13 @@ import Connection
 import Node
 import random
 
+
 class Tomography(object):
     """Main class to operate the network. Will control all nodes, connections, and increments."""
+
     def __init__(self, manual=False, nodes=None, connections=None):
         self.manual = manual
-        #xor stand in
+        # xor stand in
         if (((nodes or connections) and not (nodes and connections))
                 or ((nodes and connections) and (len(nodes) < (len(connections) - 1)))):
             raise IndexError
@@ -44,7 +46,6 @@ class Tomography(object):
             node1.add_connection(conn)
             node2.add_connection(conn)
 
-
     def neighbors(self, node1, node2):
         """Checks if two Nodes are immediately adjacent to eachother."""
         for connection in self.connections:
@@ -77,21 +78,20 @@ class Tomography(object):
             message += '\n----------------------------------------------------------------------\n'
         return message
 
+
 def validate_connections(nodes, connections):
     """Ensure all connections actually connect to a node that has been provided."""
-    #nodes may have multiple connections to the same node
+    # nodes may have multiple connections to the same node
     #(this is to allow for data centers/smaller servers)
     if not connections or not nodes:
         return
     if len(nodes) < len(connections) - 1:
-        #There can't be no nodes then connections less 1
+        # There can't be no nodes then connections less 1
         raise IndexError
     names = [node.address for node in nodes]
     for connection_obj in connections:
         if (connection_obj.start_node.address == connection_obj.end_node.address
                 or connection_obj.start_node.address not in names
                 or connection_obj.end_node.address not in names):
-            raise AttributeError #addressError
+            raise AttributeError  # addressError
     return True
-
-

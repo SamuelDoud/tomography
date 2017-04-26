@@ -7,8 +7,10 @@ import collections
 import Packet
 import PingInfo
 
+
 class Node(object):
     """A node is the [current] base class of an object that connects to the 'Internet'."""
+
     def __init__(self, connections=None, address=None, *, debugging=True):
         self.address = address
         if self.address:
@@ -51,8 +53,9 @@ class Node(object):
                     packet.origin = packet.destination
                     packet.destination = temp
                     packet.ping_back = True
-                    packet.log = [] #maybe make the reverse of the log the cache...
-                    #send the ping back to the user
+                    # maybe make the reverse of the log the cache...
+                    packet.log = []
+                    # send the ping back to the user
                     self.route_traffic(packet)
             self.debug(packet.message)
 
@@ -62,41 +65,43 @@ class Node(object):
             destination = packet.log.index(self.address) + 1
         else:
             address = packet.destination.split('.')
-            #determine if the traffic is downstream or upstream
+            # determine if the traffic is downstream or upstream
             destination = self.determine_common_node(address)
         for connection in self.connections[0] + self.connections[1:]:
             if connection.end_node.address == destination or connection.start_node.address == destination:
-                #The Node to route traffic to has been found
-                #send traffic to it and end the search.
+                # The Node to route traffic to has been found
+                # send traffic to it and end the search.
                 connection.send_packet(self.address, packet)
                 return
-        #if this no connection is found then this code will be reached
+        # if this no connection is found then this code will be reached
         raise LookupError()
 
     def determine_common_node(self, target_address):
         """Determine the first node the target and this node share in common"""
         address_split_temp = self.address_split
         target_address_split = target_address
-        #make them the same length
+        # make them the same length
         difference = len(address_split_temp) - len(target_address_split)
         if difference > 0:
             target_address_split += ['0'] * difference
         if difference < 0:
             address_split_temp += ['0'] * (-1 * difference)
-        difference_split = [str(int(t) - int(s)) for t, s in zip(target_address_split, address_split_temp)]
-        
+        difference_split = [str(int(t) - int(s))
+                            for t, s in zip(target_address_split, address_split_temp)]
+
         for index, part in enumerate(difference_split):
             if part != '0':
                 if (target_address_split[index] == '0' or address_split_temp[index] == '0'):
                     if target_address_split[index] == '0':
                         destination = '.'.join(address_split_temp[:-1])
                     else:
-                        destination = '.'.join(target_address_split[:index + 1])
+                        destination = '.'.join(
+                            target_address_split[:index + 1])
                 else:
                     destination = '.'.join(trim_zero(address_split_temp[:-1]))
                 break
         return clean(destination)
-            
+
     def search(self):
         """Placeholder method that will find a path if the normal methods
         (determine_common_node) do not work."""
@@ -115,7 +120,7 @@ class Node(object):
         if is_parent:
             self.connections[0].append(connection)
         else:
-            #add the parent connection to the first spot
+            # add the parent connection to the first spot
             self.connections.append(connection)
         if not self.address:
             self.assign_address()
@@ -127,7 +132,7 @@ class Node(object):
         if index > 0:
             self.connections.pop(connection)
         if index == 0:
-            #No longer connected to any other Node. Delete its address
+            # No longer connected to any other Node. Delete its address
             self.address = None
 
     def assign_address(self, override=None):
@@ -138,7 +143,8 @@ class Node(object):
         if override:
             self.address = override
         parent = self.connections[0][0]
-        self.address = parent.start_node.address + '.' + str(len(parent.start_node.connections) - 1)
+        self.address = parent.start_node.address + '.' + \
+            str(len(parent.start_node.connections) - 1)
         self.address_split = self.address.split('.')
 
     def construct_address(self, upstream_node):
@@ -153,7 +159,8 @@ class Node(object):
 
     def ping(self, target_address):
         """Sends a message to another node in order to determine the time to that node"""
-        ping_packet = Packet.Packet(target_address, self.address, ping_msg=self.tick_number)
+        ping_packet = Packet.Packet(
+            target_address, self.address, ping_msg=self.tick_number)
         self.route_traffic(ping_packet)
 
     def add_to_ping_stats(self, ping_packet):
@@ -172,9 +179,9 @@ class Node(object):
         message = [ping.information_summary for ping in self.ping_info_cache]
 
 
-
 class EndUser(Node):
     """An EndUser is a Node that is analogous to a consumer of information."""
+
     def __init__(self, connections, address, *, debugging=True, traffic_chance=0.1):
         super().__init__(self, connections, address, debugging)
         if traffic_chance > 0 and traffic_chance <= 1:
@@ -204,9 +211,11 @@ class EndUser(Node):
             if count >= selection:
                 return servers[index]
 
+
 class Server(Node):
     """A server is a node that generates more traffic than it recieves.
     Think of a Netflix or a Facebook. They send more to their users than vice-versa."""
+
     def init(self, connections, address, *, debugging=True, traffic_level=10, std_dev=3):
         """"Creates a Server instance of a Node."""
         super().__init__(self, connections, address, debugging)
@@ -224,13 +233,16 @@ class Server(Node):
     def generate_traffic(self, target_node_address, message=""):
         """Generate a number of packets to send to another Node."""
         for packet_number in range(self.determine_traffic_intensity):
-            packet = Packet.Packet(target_node_address, self.address, message + packet_number)
+            packet = Packet.Packet(target_node_address,
+                                   self.address, message + packet_number)
             super().route_traffic(packet)
 
     def recieve_packet(self, packet):
         """Gets a message from another node and fires back a many packets."""
         super().debug(packet.message)
-        self.generate_traffic(packet.origin, "Responding to " + packet.message + ". ")
+        self.generate_traffic(
+            packet.origin, "Responding to " + packet.message + ". ")
+
 
 def clean(address):
     address = address.split('.')
@@ -240,6 +252,7 @@ def clean(address):
         else:
             break
     return '.'.join(address)
+
 
 def trim_zero(address_list):
     for part in address_list[::-1]:

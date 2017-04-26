@@ -1,8 +1,10 @@
 """A Connection is a list of links. Propagates data to and from Nodes."""
 import Packet
 
+
 class Connection(object):
     """Container for Link objects."""
+
     def __init__(self, start_node, end_node, tapping_nodes=None):
         self.links = [[], []]
         self.start_node = start_node
@@ -41,19 +43,19 @@ class Connection(object):
 
     def add_link(self, link=None, links=None):
         """Add a link and/or links to this connection."""
-        #flexible to allow to for a list of links or a single object.
+        # flexible to allow to for a list of links or a single object.
         if not links:
             links = []
         links.append(link)
         for new_link in links:
             pos = Packet.UPSTREAM if new_link.start_node == self.end_node else Packet.UPSTREAM
-            #add a link to upstream or downstream links
+            # add a link to upstream or downstream links
             self.links[pos].append(new_link)
 
     def pass_to_node(self, packet):
         """Give data to the node that the data did not come from.
         Also pass to tapping nodes"""
-        #for tap in self.tapping_nodes:
+        # for tap in self.tapping_nodes:
         #    tap.recieve_packet.append(packet)
         if packet:
             if packet.direction == Packet.UPSTREAM:

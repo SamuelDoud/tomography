@@ -1,5 +1,6 @@
 class Link(object):
     """Handles packet transfer from node-to-node based controlled by a Connection."""
+
     def __init__(self, start_node, end_node, weight, buffer_size=10):
         self.end_node = end_node
         self.start_node = start_node
@@ -13,7 +14,7 @@ class Link(object):
     def recieve_packet(self, data):
         """Takes a packet from the connection and keeps it until it has passed through the link."""
         if len(self.buffer) > self.buffer_size:
-            #The buffer is full and the packet will be dropped if not handled.
+            # The buffer is full and the packet will be dropped if not handled.
             raise OverflowError
         self.buffer.append(data)
 
@@ -21,7 +22,7 @@ class Link(object):
         """Update the buffer by decrementing the time on the top link by one."""
         self.data_bubble = None
         if self.buffer:
-            #the packet has now reached its destination
+            # the packet has now reached its destination
             self.in_link.append(self.buffer[0])
             self.buffer = self.buffer[1:]
         else:
@@ -40,8 +41,8 @@ class Link(object):
         """Get the number of ticks required to clear the buffer.
         Also ensure that the buffer isn't full!"""
         if len(self.buffer) == self.buffer_size:
-            #just pass up None to indicate that the buffer is full and there is no legal wait time.
+            # just pass up None to indicate that the buffer is full and there
+            # is no legal wait time.
             return None
         wait_time = len(self.buffer) * self.weight
         return wait_time
-    
