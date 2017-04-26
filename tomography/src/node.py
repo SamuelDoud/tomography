@@ -80,14 +80,23 @@ class Node(object):
         #make them the same length
         difference = len(address_split_temp) - len(target_address_split)
         if difference > 0:
-            target_address_split += [0] * difference
+            target_address_split += ['0'] * difference
         if difference < 0:
-            address_split_temp += [0] * (-1 * difference)
+            address_split_temp += ['0'] * (-1 * difference)
         difference_split = [str(int(t) - int(s)) for t, s in zip(target_address_split, address_split_temp)]
+        
         for index, part in enumerate(difference_split):
             if part != '0':
-                return '.'.join(address_split_temp[:index] + [target_address_split[index]])
-
+                if (target_address_split[index] == '0' or address_split_temp[index] == '0'):
+                    if target_address_split[index] == '0':
+                        destination = '.'.join(address_split_temp[:-1])
+                    else:
+                        destination = '.'.join(target_address_split[:index + 1])
+                else:
+                    destination = '.'.join(trim_zero(address_split_temp[:-1]))
+                break
+        return clean(destination)
+            
     def search(self):
         """Placeholder method that will find a path if the normal methods
         (determine_common_node) do not work."""
@@ -223,3 +232,19 @@ class Server(Node):
         super().debug(packet.message)
         self.generate_traffic(packet.origin, "Responding to " + packet.message + ". ")
 
+def clean(address):
+    address = address.split('.')
+    for part in address[::-1]:
+        if part == '0':
+            address = address.pop(0)
+        else:
+            break
+    return '.'.join(address)
+
+def trim_zero(address_list):
+    for part in address_list[::-1]:
+        if part == '0':
+            address_list = address_list[:-1]
+        else:
+            break
+    return address_list

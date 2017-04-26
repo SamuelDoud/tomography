@@ -1,6 +1,6 @@
 class Link(object):
     """Handles packet transfer from node-to-node based controlled by a Connection."""
-    def __init__(self, start_node, end_node, weight, buffer_size=1):
+    def __init__(self, start_node, end_node, weight, buffer_size=10):
         self.end_node = end_node
         self.start_node = start_node
         self.weight = weight
@@ -23,7 +23,7 @@ class Link(object):
         if self.buffer:
             #the packet has now reached its destination
             self.in_link.append(self.buffer[0])
-            self.buffer = self.buffer.pop(0)
+            self.buffer = self.buffer[1:]
         else:
             self.in_link.append(None)
         self.pass_packet()
@@ -33,7 +33,7 @@ class Link(object):
         """Simple method to propagate the data that just passed through the
          link to the connection."""
         self.data_bubble = self.in_link[0]
-        self.in_link = self.in_link.pop(0)
+        self.in_link = self.in_link[1:]
         return self.data_bubble
 
     def buffer_sum(self):
@@ -43,7 +43,5 @@ class Link(object):
             #just pass up None to indicate that the buffer is full and there is no legal wait time.
             return None
         wait_time = len(self.buffer) * self.weight
-        if len(self.buffer) > 0:
-            wait_time -= (self.weight + self.buffer[1][0])
         return wait_time
     

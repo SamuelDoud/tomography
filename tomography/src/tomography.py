@@ -63,9 +63,9 @@ class Tomography(object):
     def random_pings(self):
         """Has every Node ping another node."""
         for index, node in enumerate(self.nodes):
-            rand_index = random.randint(0, len(self.nodes))
+            rand_index = random.randint(0, len(self.nodes) - 1)
             while rand_index == index:
-                rand_index = random.randint(0, len(self.nodes))
+                rand_index = random.randint(0, len(self.nodes) - 1)
             node.ping(self.nodes[rand_index].address)
         self.tick(generate_traffic=False)
 

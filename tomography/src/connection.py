@@ -15,7 +15,8 @@ class Connection(object):
         """Update every link in this connection by 'ticking' time by 'tick' units."""
         for _counter in range(tick):
             for link in self.links[Packet.DOWNSTREAM] + self.links[Packet.UPSTREAM]:
-                self.pass_to_node(link.tick())
+                link.tick()
+                self.pass_to_node(link.data_bubble)
 
     def send_packet(self, origin, packet):
         """Send the packet to the link."""
@@ -27,14 +28,16 @@ class Connection(object):
 
     def best_link(self, direction):
         """Find the least busy link in this connection."""
-        min_index = None
         min_index = 0
         for index, time in enumerate([link.buffer_sum() for link in self.links[direction]]):
             if not min_index:
-                min_index = time
+                min_index = time if time else 0
             elif min_index > time:
                 min_index = index
-        return self.links[min_index][direction]
+        try:
+            return self.links[min_index][direction]
+        except:
+            return self.links[0][direction]
 
     def add_link(self, link=None, links=None):
         """Add a link and/or links to this connection."""
@@ -50,12 +53,13 @@ class Connection(object):
     def pass_to_node(self, packet):
         """Give data to the node that the data did not come from.
         Also pass to tapping nodes"""
-        for tap in self.tapping_nodes:
-            tap.recieve_packet.append(packet)
-        if packet.direction == Packet.UPSTREAM:
-            self.start_node.recieve_packet(packet)
-        if packet.direction == Packet.DOWNSTREAM:
-            self.end_node.recieve_packet(packet)
+        #for tap in self.tapping_nodes:
+        #    tap.recieve_packet.append(packet)
+        if packet:
+            if packet.direction == Packet.UPSTREAM:
+                self.start_node.recieve_packet(packet)
+            if packet.direction == Packet.DOWNSTREAM:
+                self.end_node.recieve_packet(packet)
 
     def end_point(self, node_address):
         """Checks if a given address is a start or end point of this Connection."""

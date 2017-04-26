@@ -66,6 +66,12 @@ parse('connect 1 2')
 parse('connect 1 2')
 parse('connect 1 2')
 parse('connect 1 2')
+parse('connect 1.1 3')
+parse('connect 1.2 2')
+parse('connect 1.1.1 1')
+parse('connect 1.4 2')
+parse('connect 1.4 4')
+parse('ping_run 20')
 while not command:
     try:
         command = str(input("Enter: "))
