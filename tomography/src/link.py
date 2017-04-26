@@ -39,7 +39,7 @@ class Link(object):
     def buffer_sum(self):
         """Get the number of ticks required to clear the buffer.
         Also ensure that the buffer isn't full!"""
-        if len(self.buffer) is self.buffer_size:
+        if len(self.buffer) == self.buffer_size:
             #just pass up None to indicate that the buffer is full and there is no legal wait time.
             return None
         wait_time = len(self.buffer) * self.weight

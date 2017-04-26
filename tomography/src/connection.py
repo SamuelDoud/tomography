@@ -19,7 +19,7 @@ class Connection(object):
 
     def send_packet(self, origin, packet):
         """Send the packet to the link."""
-        if origin is self.start_node.address:
+        if origin == self.start_node.address:
             packet.direction = Packet.DOWNSTREAM
         else:
             packet.direction = Packet.UPSTREAM
@@ -43,7 +43,7 @@ class Connection(object):
             links = []
         links.append(link)
         for new_link in links:
-            pos = Packet.UPSTREAM if new_link.start_node is self.end_node else Packet.UPSTREAM
+            pos = Packet.UPSTREAM if new_link.start_node == self.end_node else Packet.UPSTREAM
             #add a link to upstream or downstream links
             self.links[pos].append(new_link)
 
@@ -52,14 +52,14 @@ class Connection(object):
         Also pass to tapping nodes"""
         for tap in self.tapping_nodes:
             tap.recieve_packet.append(packet)
-        if packet.direction is Packet.UPSTREAM:
+        if packet.direction == Packet.UPSTREAM:
             self.start_node.recieve_packet(packet)
-        if packet.direction is Packet.DOWNSTREAM:
+        if packet.direction == Packet.DOWNSTREAM:
             self.end_node.recieve_packet(packet)
 
     def end_point(self, node_address):
         """Checks if a given address is a start or end point of this Connection."""
-        return node_address is self.end_node or node_address is self.start_node
+        return node_address == self.end_node or node_address == self.start_node
 
     def connected(self, node1_address, node2_address):
         """Checks if this connection connect node1 to node2?"""

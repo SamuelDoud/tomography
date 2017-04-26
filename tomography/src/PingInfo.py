@@ -32,7 +32,7 @@ class PingInfo(object):
 
     def calc_std_dev(self):
         """Calculates the standard deviation of the ping info."""
-        if self.count is 1:
+        if self.count == 1:
             #z-score is going to be 0 anyway
             #as there is only one item in counts and therefore the average
             self.standard_dev = 1

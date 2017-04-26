@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b3737130-29ff-43d2-93c4-ecf8a41c4250</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>src/Display.py</StartupFile>
+    <StartupFile>src\Test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -36,6 +36,8 @@
     <Compile Include="src\Packet.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="src\PingInfo.py" />
+    <Compile Include="src\Test.py" />
     <Compile Include="src\Tomography.py">
       <SubType>Code</SubType>
     </Compile>

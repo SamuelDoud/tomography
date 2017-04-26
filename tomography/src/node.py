@@ -34,7 +34,7 @@ class Node(object):
     def recieve_packet(self, packet):
         """Takes a packet from a connection and determines
          its next connection if not the target."""
-        if packet.destination is not self.address:
+        if packet.destination != self.address:
             try:
                 self.route_traffic(packet)
             except LookupError:
@@ -63,7 +63,7 @@ class Node(object):
             #determine if the traffic is downstream or upstream
             destination = self.determine_common_node(address)
         for connection in self.connections:
-            if connection.address is destination:
+            if connection.address == destination:
                 #The Node to route traffic to has been found
                 #send traffic to it and end the search.
                 connection.send_data(self.address, packet)
@@ -73,14 +73,14 @@ class Node(object):
 
     def determine_common_node(self, target_address):
         """Determine the first node the target and this node share in common"""
-        if len(target_address) is not len(self.address_split):
+        if len(target_address) != len(self.address_split):
             while len(target_address) > len(self.address_split):
                 self.address_split.append(0)
             while len(target_address) < len(self.address_split):
                 target_address.append(0)
         for index, this_layer in enumerate(self.address_split):
-            if this_layer is not target_address[index]:
-                if this_layer is 0:
+            if this_layer != target_address[index]:
+                if this_layer == 0:
                     return self.address_split
                 if target_address[index] is 0:
                     return target_address
@@ -103,11 +103,11 @@ class Node(object):
             self.connections[0] = [self.connections[0]]
         if is_parent:
             self.connections[0].append(connection)
-            if not self.address:
-                self.assign_address()
         else:
             #add the parent connection to the first spot
             self.connections.append(connection)
+        if not self.address:
+            self.assign_address()
 
     def remove_connection(self, connection):
         """Delete a connection from the Node.
@@ -115,7 +115,7 @@ class Node(object):
         index = self.connections.index(connection)
         if index > 0:
             self.connections.pop(connection)
-        if index is 0:
+        if index == 0:
             #No longer connected to any other Node. Delete its address
             self.address = None
 
@@ -127,7 +127,7 @@ class Node(object):
         if override:
             self.address = override
         parent = self.connections[0][0]
-        self.address = parent.address + '.' + len(parent.connections)
+        self.address = parent.start_node.address + '.' + str(len(parent.start_node.connections) - 1)
         self.address_split = self.address.split('.')
 
     def construct_address(self, upstream_node):
@@ -151,7 +151,7 @@ class Node(object):
         target_address = ping_packet.origin
         paths = ping_packet.path
         for ping_info_cache_item in self.ping_info_cache:
-            if target_address is ping_info_cache_item.target:
+            if target_address == ping_info_cache_item.target:
                 ping_info_cache_item.add_to_stats(time_to_respond, paths)
                 return
         self.ping_info_cache.append(PingInfo.PingInfo(target_address))

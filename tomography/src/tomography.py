@@ -64,7 +64,7 @@ class Tomography(object):
         """Has every Node ping another node."""
         for index, node in enumerate(self.nodes):
             rand_index = random.randint(0, len(self.nodes))
-            while rand_index is index:
+            while rand_index == index:
                 rand_index = random.randint(0, len(self.nodes))
             node.ping(self.nodes[rand_index].address)
         self.tick(generate_traffic=False)
@@ -88,7 +88,7 @@ def validate_connections(nodes, connections):
         raise IndexError
     names = [node.address for node in nodes]
     for connection_obj in connections:
-        if (connection_obj.start_node.address is connection_obj.end_node.address
+        if (connection_obj.start_node.address == connection_obj.end_node.address
                 or connection_obj.start_node.address not in names
                 or connection_obj.end_node.address not in names):
             raise AttributeError #addressError
