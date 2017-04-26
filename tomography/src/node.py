@@ -5,20 +5,29 @@ import random
 import collections
 
 import Packet
+import PingInfo
 
 class Node(object):
     """A node is the [current] base class of an object that connects to the 'Internet'."""
     def __init__(self, connections=None, address=None, *, debugging=True):
         self.address = address
-        self.address_split = self.address.split('.')
+        if self.address:
+            self.address_split = self.address.split('.')
         self.connections = list(connections) if connections else []
-        self.connections[0] = [self.connections[0]]
+        if self.connections:
+            self.connections[0] = [self.connections[0]]
+        else:
+            self.connections.append([])
         self.debug_mode = debugging
-        self.paths_cache = []
+        self.paths_cache = {}
+        self.ping_info_cache = []
+        self.tick_number = 0
         self.address_counter = -1
 
     def generate_traffic(self, target_node_address, message=""):
-        """Generates traffic from this node to a target"""
+        """Generates traffic from this node to a target.
+        This is the method called to tick the model forward."""
+        self.tick_number += 1
         data = Packet.Packet(target_node_address, self.address, message)
         self.route_traffic(data)
 
@@ -31,20 +40,35 @@ class Node(object):
             except LookupError:
                 print("Cannot route traffic")
         else:
-            self.paths_cache.append(packet)
+            self.paths_cache[packet.origin] = packet.get_reverse_log
+            if packet.ping_msg:
+                if packet.ping_back:
+                    self.add_to_ping_stats(packet)
+                else:
+                    temp = packet.origin
+                    packet.origin = packet.destination
+                    packet.destination = temp
+                    packet.ping_back = True
+                    packet.log = [] #maybe make the reverse of the log the cache...
+                    #send the ping back to the user
+                    self.route_traffic(packet)
             self.debug(packet.message)
 
     def route_traffic(self, packet):
         """Find the correct node to send a packet to."""
-        address = packet.destination.split('.')
-        #determine if the traffic is downstream or upstream
-        destination = self.determine_common_node(address)
+        if packet.has_cached:
+            destination = packet.log.index(self.address) + 1
+        else:
+            address = packet.destination.split('.')
+            #determine if the traffic is downstream or upstream
+            destination = self.determine_common_node(address)
         for connection in self.connections:
             if connection.address is destination:
                 #The Node to route traffic to has been found
                 #send traffic to it and end the search.
                 connection.send_data(self.address, packet)
                 return
+        #if this no connection is found then this code will be reached
         raise LookupError()
 
     def determine_common_node(self, target_address):
@@ -75,15 +99,15 @@ class Node(object):
     def add_connection(self, connection, is_parent):
         """Add a Connection to this Node.
         This allows for the Node to calculate an address."""
+        if not isinstance(self.connections[0], collections.Iterable):
+            self.connections[0] = [self.connections[0]]
         if is_parent:
-            self.connections.append(connection)
+            self.connections[0].append(connection)
             if not self.address:
                 self.assign_address()
         else:
             #add the parent connection to the first spot
-            if not isinstance(self.connections[0], collections.Iterable):
-                self.connections[0] = [self.connections[0]]
-            self.connections[0].append(connection)
+            self.connections.append(connection)
 
     def remove_connection(self, connection):
         """Delete a connection from the Node.
@@ -95,23 +119,16 @@ class Node(object):
             #No longer connected to any other Node. Delete its address
             self.address = None
 
-    def assign_address(self, incrementer=0, override=None):
+    def assign_address(self, override=None):
         """Give this Node an address based on the first upstream Node we find.
         If no upstream nodes exist, assign the value of the incrementer.
         The incrementer is the number that will be assigned to nodes with no upstream members
         (in other words, the center of the network)."""
         if override:
             self.address = override
-            return incrementer
-        for index, connection in enumerate(self.connections):
-            if connection.start_node.address is not self.address:
-                self.address = self.construct_address(connection)
-                #Move this connection to the first position in the list.
-                if index is not 0:
-                    self.connections.pop(index)
-                    self.connections.append(connection)
-                return incrementer
-        return incrementer + 1
+        parent = self.connections[0][0]
+        self.address = parent.address + '.' + len(parent.connections)
+        self.address_split = self.address.split('.')
 
     def construct_address(self, upstream_node):
         """Give this node an address based on an upstream node"""
@@ -122,6 +139,28 @@ class Node(object):
         """Get the next index to assign a node"""
         self.address_counter += 1
         return self.address_counter
+
+    def ping(self, target_address):
+        """Sends a message to another node in order to determine the time to that node"""
+        ping_packet = Packet.Packet(self.address, target_address, ping_msg=self.tick_number)
+        self.route_traffic(ping_packet)
+
+    def add_to_ping_stats(self, ping_packet):
+        """Add the results of a ping to the statistics of the node."""
+        time_to_respond = self.tick_number - ping_packet.ping_msg
+        target_address = ping_packet.origin
+        paths = ping_packet.path
+        for ping_info_cache_item in self.ping_info_cache:
+            if target_address is ping_info_cache_item.target:
+                ping_info_cache_item.add_to_stats(time_to_respond, paths)
+                return
+        self.ping_info_cache.append(PingInfo.PingInfo(target_address))
+        self.ping_info_cache[-1].add_to_stats(time_to_respond, paths)
+
+    def ping_dump(self):
+        message = [ping.information_summary for ping in self.ping_info_cache]
+
+
 
 class EndUser(Node):
     """An EndUser is a Node that is analogous to a consumer of information."""
@@ -181,3 +220,4 @@ class Server(Node):
         """Gets a message from another node and fires back a many packets."""
         super().debug(packet.message)
         self.generate_traffic(packet.origin, "Responding to " + packet.message + ". ")
+

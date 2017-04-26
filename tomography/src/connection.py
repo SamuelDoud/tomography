@@ -7,25 +7,15 @@ class Connection(object):
         self.links = [[], []]
         self.start_node = start_node
         self.end_node = end_node
-        self.tapping_nodes = []
-        self.nodes = [self.start_node, self.end_node] + tapping_nodes
+        self.tapping_nodes = tapping_nodes
         self.buffer = []
         self.packets_in_buffer = []
 
     def tick(self, tick=1):
         """Update every link in this connection by 'ticking' time by 'tick' units."""
         for _counter in range(tick):
-            for link in self.links:
+            for link in self.links[Packet.DOWNSTREAM] + self.links[Packet.UPSTREAM]:
                 self.pass_to_node(link.tick())
-
-    def recieve_packet(self, packet):
-        """Takes a pack as input and attaches that packet to the least busy link."""
-        if packet:
-            try:
-                self.best_link().recieve_packet(packet)
-                self.packets_in_buffer.append(packet)
-            except OverflowError:
-                print("Packet drop.")
 
     def send_packet(self, origin, packet):
         """Send the packet to the link."""

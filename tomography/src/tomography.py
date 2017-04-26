@@ -1,5 +1,7 @@
 """Controls the Network in a God-like manner."""
 import Connection
+import Node
+import random
 
 class Tomography(object):
     """Main class to operate the network. Will control all nodes, connections, and increments."""
@@ -15,8 +17,8 @@ class Tomography(object):
                 self.connections = connections
         except AttributeError:
             print("A connection does not have an end or start point")
-        self.nodes = nodes
-        self.connections = connections
+        self.nodes = nodes if nodes else []
+        self.connections = connections if connections else []
 
     def remove_node(self, node):
         """Removes the node from the list of Nodes and removes any connections that
@@ -28,7 +30,10 @@ class Tomography(object):
 
     def add_node(self, node):
         """Add a node to the node list."""
-        self.nodes.append(node)
+        if not self.nodes:
+            self.nodes = [node]
+        else:
+            self.nodes.append(node)
 
     def add_connection(self, node1, node2, links=None):
         """Add a connection between two nodes so long a they are already not connected."""
@@ -47,12 +52,30 @@ class Tomography(object):
                 return True
         return False
 
-    def tick(self):
+    def tick(self, generate_traffic=True):
         """Increment all connections by one unit of time."""
-        for node in self.nodes:
-            node.generate_traffic()
+        if generate_traffic:
+            for node in self.nodes:
+                node.generate_traffic()
         for connection in self.connections:
             connection.tick()
+
+    def random_pings(self):
+        """Has every Node ping another node."""
+        for index, node in enumerate(self.nodes):
+            rand_index = random.randint(0, len(self.nodes))
+            while rand_index is index:
+                rand_index = random.randint(0, len(self.nodes))
+            node.ping(self.nodes[rand_index].address)
+        self.tick(generate_traffic=False)
+
+    def ping_info(self):
+        """Prints out the information of all nodes and their pings"""
+        message = ''
+        for node in self.nodes:
+            message += node.ping_info_dump()
+            message += '\n----------------------------------------------------------------------\n'
+        return message
 
 def validate_connections(nodes, connections):
     """Ensure all connections actually connect to a node that has been provided."""
@@ -70,3 +93,5 @@ def validate_connections(nodes, connections):
                 or connection_obj.end_node.address not in names):
             raise AttributeError #addressError
     return True
+
+
